@@ -10,25 +10,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var contentNode = document.getElementById("root");
 
-// Data
-var issues = [{
-  id: 1,
-  status: "Open",
-  owner: "Ravan",
-  created: new Date("2016-08-15"),
-  effort: 5,
-  completionDate: undefined,
-  title: "Error in console when clicking add"
-}, {
-  id: 2,
-  status: "Assigned",
-  owner: "Eddie",
-  created: new Date("2016-08-16"),
-  effort: 14,
-  completionDate: new Date("2016-08-30"),
-  title: "Missing bottom border on panel"
-}];
-
 // IssueFilter Component
 
 var IssueFilter = function (_React$Component) {
@@ -238,17 +219,38 @@ var IssueList = function (_React$Component3) {
     value: function loadDate() {
       var _this4 = this;
 
-      setTimeout(function () {
-        _this4.setState({ issues: issues });
-      }, 500);
+      fetch("/api/issues").then(function (response) {
+        return response.json();
+      }).then(function (data) {
+        data.records.forEach(function (issue) {
+          issue.created = new Date(issue.created);
+          issue.completionDate = issue.completionDate && new Date(issue.completionDate);
+        });
+        _this4.setState({ issues: data.records });
+      }).catch(function (err) {
+        return console.log(err);
+      });
     }
   }, {
     key: "createIssue",
     value: function createIssue(newIssue) {
-      var newIssues = this.state.issues.slice();
-      newIssue.id = this.state.issues.length + 1;
-      newIssues.push(newIssue);
-      this.setState({ issues: newIssues });
+      var _this5 = this;
+
+      fetch("/api/issues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newIssue)
+      }).then(function (response) {
+        return response.json();
+      }).then(function (updatedIssue) {
+        updatedIssue.created = new Date(updatedIssue.created);
+        updatedIssue.completionDate = updatedIssue.completionDate && new Date(updatedIssue.completionDate);
+
+        var newIssues = _this5.state.issues.concat(updatedIssue);
+        _this5.setState({ issues: newIssues });
+      }).catch(function (err) {
+        return alert("Error in sending data to server: " + err.message);
+      });
     }
   }, {
     key: "render",
