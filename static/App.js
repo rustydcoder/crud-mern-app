@@ -47,7 +47,7 @@ var IssueRow = function IssueRow(props) {
     React.createElement(
       "td",
       null,
-      issue.id
+      issue._id
     ),
     React.createElement(
       "td",
@@ -84,7 +84,7 @@ var IssueRow = function IssueRow(props) {
 
 function IssueTable(props) {
   var IssueRows = props.issues.map(function (issue) {
-    return React.createElement(IssueRow, { key: issue.id, issue: issue });
+    return React.createElement(IssueRow, { key: issue._id, issue: issue });
   });
 
   return React.createElement(
@@ -220,13 +220,19 @@ var IssueList = function (_React$Component3) {
       var _this4 = this;
 
       fetch("/api/issues").then(function (response) {
-        return response.json();
-      }).then(function (data) {
-        data.records.forEach(function (issue) {
-          issue.created = new Date(issue.created);
-          issue.completionDate = issue.completionDate && new Date(issue.completionDate);
-        });
-        _this4.setState({ issues: data.records });
+        if (response.ok) {
+          response.json().then(function (data) {
+            data.records.forEach(function (issue) {
+              issue.created = new Date(issue.created);
+              issue.completionDate = issue.completionDate && new Date(issue.completionDate);
+            });
+            _this4.setState({ issues: data.records });
+          });
+        } else {
+          response.json().then(function (err) {
+            alert("Failed to fetch issues: " + err.message);
+          });
+        }
       }).catch(function (err) {
         return console.log(err);
       });
